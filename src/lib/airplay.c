@@ -462,10 +462,23 @@ airplay_conn_request(void *ptr, http_request_t *request, http_response_t **respo
 		res = http_response_init("HTTP/1.1", status, http_status_string(status));
 	} else if (!strcmp(url, "/play ")) {
 		const char *content_type;
+		const char *loc;
+		float fposition = 0.0f;
 		content_type = http_request_get_header(request, "Content-Type");
 		if (content_type) {
-			if (!strncmp(content_type, "application/x-apple-binary-plist", 4)) {
-				next_seq = strtol(rtpinfo+4, NULL, 10);
+			//application/x-apple-binary-plist;iphone
+			if (strstr(content_type, "application/x-apple-binary-plist") != NULL)
+			{
+				const char *data;
+				int datalen;
+				data = http_request_get_data(request, &datalen);
+			}
+			//text/parameters;iTunes
+			else
+			{
+				loc = http_request_get_header(request, "Content-Location");
+				fposition = atof(http_request_get_header(request, "Start-Position"));
+				printf("/play %s %f\n", loc, fposition);
 			}
 		}
 		int binaryplist = strstr(buffer, "application/x-apple-binary-plist") != 0;
