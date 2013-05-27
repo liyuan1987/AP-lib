@@ -1867,6 +1867,24 @@ size_t http_parser_execute (http_parser *parser,
   CALLBACK_DATA_NOADVANCE(header_value);
   CALLBACK_DATA_NOADVANCE(url);
   CALLBACK_DATA_NOADVANCE(body);
+  //CALLBACK_DATA_(body, p - body_mark, p - data)
+  {                                                                 \
+  assert(HTTP_PARSER_ERRNO(parser) == HPE_OK);                       \
+                                                                     \
+  if (body_mark) {                                                  \
+    if (settings->on_body) {                                        \
+      if (0 != settings->on_body(parser, body_mark, (p - body_mark))) {      \
+        SET_ERRNO(HPE_CB_body);                                     \
+      }                                                              \
+                                                                     \
+      /* We either errored above or got paused; get out */           \
+      if (HTTP_PARSER_ERRNO(parser) != HPE_OK) {                     \
+        return (p-data);                                                 \
+      }                                                              \
+    }                                                                \
+    body_mark = NULL;                                               \
+  }                                                                  \
+}
 
   return len;
 
